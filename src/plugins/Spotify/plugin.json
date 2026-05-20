@@ -1,0 +1,17 @@
+{
+  "id": "sporify_plugin",
+  "name": "Spotify",
+  "display_name": "Spotify",
+  "entry_point": "plugin.py",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "Простой пример плагина",
+  "icon": "icons/plugin.png",
+
+  "theme_overrides": {
+    "accent":        "#f03e3e",
+    "accent_hover":  "#e03131",
+    "border_focus":  "#f03e3e",
+    "radius_md":     "10px"
+  }
+}
