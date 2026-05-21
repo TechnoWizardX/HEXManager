@@ -1,0 +1,303 @@
+/* ============================================================
+   HEXManager — базовый QSS-шаблон
+   Все токены подставляются из .json файла темы.
+   Не редактируй значения цветов здесь — только структуру/правила.
+   ============================================================ */
+
+
+/* ── Главное окно ─────────────────────────────────────────── */
+QMainWindow, QDialog {{
+    background-color: {bg_window};
+}}
+
+QWidget {{
+    background-color: transparent;
+    color: {text_primary};
+    font-size: 13px;
+}}
+
+
+/* ── Панели / фреймы ──────────────────────────────────────── */
+QFrame, QScrollArea {{
+    background-color: {bg_panel};
+    border: none;
+}}
+
+
+/* ── Кнопки ───────────────────────────────────────────────── */
+QPushButton {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    padding: {spacing_md} 14px;
+    text-align: left;
+}}
+QPushButton:hover {{
+    background-color: {bg_hover};
+    border-color: {border_focus};
+}}
+QPushButton:pressed {{
+    background-color: {bg_pressed};
+}}
+QPushButton:checked {{
+    background-color: {accent};
+    color: {accent_text};
+    border-color: {accent};
+}}
+QPushButton:disabled {{
+    color: {text_disabled};
+    border-color: {border};
+}}
+
+
+/* ── Метки ────────────────────────────────────────────────── */
+QLabel {{
+    background-color: transparent;
+    color: {text_primary};
+}}
+
+
+/* ── Поля ввода ───────────────────────────────────────────── */
+QLineEdit, QTextEdit, QPlainTextEdit {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    padding: {spacing_sm} {spacing_md};
+    selection-background-color: {accent};
+    selection-color: {accent_text};
+}}
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {{
+    border-color: {border_focus};
+}}
+
+
+/* ── Комбобокс ────────────────────────────────────────────── */
+QComboBox {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    padding: {spacing_sm} {spacing_md};
+}}
+QComboBox:hover {{
+    border-color: {border_focus};
+}}
+QComboBox QAbstractItemView {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    selection-background-color: {accent};
+    selection-color: {accent_text};
+}}
+
+
+/* ── Чекбокс / Радио ──────────────────────────────────────── */
+QCheckBox, QRadioButton {{
+    color: {text_primary};
+    background-color: transparent;
+    spacing: 6px;
+}}
+QCheckBox::indicator, QRadioButton::indicator {{
+    width: 16px;
+    height: 16px;
+    border: 1px solid {border};
+    border-radius: {radius_sm};
+    background-color: {bg_widget};
+}}
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {{
+    background-color: {accent};
+    border-color: {accent};
+}}
+
+
+/* ── Скроллбар ────────────────────────────────────────────── */
+QScrollBar:vertical {{
+    background: {scrollbar_bg};
+    width: 8px;
+    border-radius: 4px;
+}}
+QScrollBar::handle:vertical {{
+    background: {scrollbar_handle};
+    border-radius: 4px;
+    min-height: 24px;
+}}
+QScrollBar::handle:vertical:hover {{
+    background: {text_secondary};
+}}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+    height: 0px;
+}}
+
+QScrollBar:horizontal {{
+    background: {scrollbar_bg};
+    height: 8px;
+    border-radius: 4px;
+}}
+QScrollBar::handle:horizontal {{
+    background: {scrollbar_handle};
+    border-radius: 4px;
+    min-width: 24px;
+}}
+QScrollBar::handle:horizontal:hover {{
+    background: {text_secondary};
+}}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+    width: 0px;
+}}
+
+
+/* ── Сплиттер ─────────────────────────────────────────────── */
+QSplitter::handle {{
+    background-color: {border};
+}}
+QSplitter::handle:horizontal {{ width: 1px; }}
+QSplitter::handle:vertical   {{ height: 1px; }}
+
+
+/* ── Стек / контентная область ────────────────────────────── */
+QStackedWidget {{
+    background-color: {bg_window};
+}}
+
+
+/* ── Статусбар ────────────────────────────────────────────── */
+QStatusBar {{
+    background-color: {bg_panel};
+    color: {text_secondary};
+}}
+
+
+/* ── Таблицы ──────────────────────────────────────────────── */
+QTableWidget, QTableView {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    gridline-color: {border};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+}}
+QHeaderView::section {{
+    background-color: {bg_panel};
+    color: {text_secondary};
+    border: none;
+    border-bottom: 1px solid {border};
+    padding: {spacing_sm} {spacing_md};
+}}
+QTableWidget::item:selected, QTableView::item:selected {{
+    background-color: {accent};
+    color: {accent_text};
+}}
+
+
+/* ── Список ───────────────────────────────────────────────── */
+QListWidget, QListView {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+}}
+QListWidget::item:hover, QListView::item:hover {{
+    background-color: {bg_hover};
+}}
+QListWidget::item:selected, QListView::item:selected {{
+    background-color: {accent};
+    color: {accent_text};
+}}
+
+
+/* ── Вкладки ──────────────────────────────────────────────── */
+QTabWidget::pane {{
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    background-color: {bg_widget};
+}}
+QTabBar::tab {{
+    background-color: {bg_panel};
+    color: {text_secondary};
+    border: 1px solid {border};
+    border-bottom: none;
+    border-radius: {radius_sm};
+    padding: {spacing_sm} 16px;
+    margin-right: 2px;
+}}
+QTabBar::tab:selected {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border-bottom: 2px solid {accent};
+}}
+QTabBar::tab:hover:!selected {{
+    background-color: {bg_hover};
+}}
+
+
+/* ── GroupBox ─────────────────────────────────────────────── */
+QGroupBox {{
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    margin-top: 12px;
+    color: {text_secondary};
+    font-size: 12px;
+}}
+QGroupBox::title {{
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 4px;
+}}
+
+
+/* ── Прогресс-бар ─────────────────────────────────────────── */
+QProgressBar {{
+    background-color: {bg_widget};
+    border: 1px solid {border};
+    border-radius: {radius_sm};
+    text-align: center;
+    color: {text_primary};
+    height: 8px;
+}}
+QProgressBar::chunk {{
+    background-color: {accent};
+    border-radius: {radius_sm};
+}}
+
+
+/* ── Слайдер ──────────────────────────────────────────────── */
+QSlider::groove:horizontal {{
+    background: {bg_widget};
+    height: 4px;
+    border-radius: 2px;
+}}
+QSlider::handle:horizontal {{
+    background: {accent};
+    width: 14px;
+    height: 14px;
+    margin: -5px 0;
+    border-radius: 7px;
+}}
+QSlider::sub-page:horizontal {{
+    background: {accent};
+    border-radius: 2px;
+}}
+
+
+/* ── Спинбокс ─────────────────────────────────────────────── */
+QSpinBox, QDoubleSpinBox {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    padding: {spacing_sm} {spacing_md};
+}}
+QSpinBox:focus, QDoubleSpinBox:focus {{
+    border-color: {border_focus};
+}}
+
+
+/* ── Тултип ───────────────────────────────────────────────── */
+QToolTip {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_sm};
+    padding: {spacing_sm} {spacing_md};
+}}

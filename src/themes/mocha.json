@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "id":           "mocha",
+    "display_name": "Мокко (Mocha)",
+    "author":       "HEXManager",
+    "description":  "Тёплая тёмная тема в коричнево-оранжевых тонах"
+  },
+
+  "tokens": {
+    "bg_window":        "#1e1a18",
+    "bg_panel":         "#2a2420",
+    "bg_widget":        "#322b27",
+    "bg_hover":         "#3d342e",
+    "bg_pressed":       "#1a1614",
+
+    "accent":           "#e8956d",
+    "accent_hover":     "#f0aa87",
+    "accent_pressed":   "#d4744a",
+    "accent_text":      "#ffffff",
+
+    "text_primary":     "#ede0d4",
+    "text_secondary":   "#a08070",
+    "text_disabled":    "#5a4a40",
+
+    "border":           "#3d342e",
+    "border_focus":     "#e8956d",
+
+    "scrollbar_bg":     "#2a2420",
+    "scrollbar_handle": "#3d342e",
+
+    "radius_sm":        "4px",
+    "radius_md":        "6px",
+    "radius_lg":        "10px",
+    "spacing_sm":       "4px",
+    "spacing_md":       "8px"
+  }
+}

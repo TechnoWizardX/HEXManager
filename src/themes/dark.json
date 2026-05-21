@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "id":           "dark",
+    "display_name": "Тёмная (Dark)",
+    "author":       "HEXManager",
+    "description":  "Классическая тёмная тема с синим акцентом"
+  },
+
+  "tokens": {
+    "bg_window":        "#1a1b1e",
+    "bg_panel":         "#25262b",
+    "bg_widget":        "#2c2e33",
+    "bg_hover":         "#373a40",
+    "bg_pressed":       "#1e1f22",
+
+    "accent":           "#4dabf7",
+    "accent_hover":     "#74c0fc",
+    "accent_pressed":   "#339af0",
+    "accent_text":      "#ffffff",
+
+    "text_primary":     "#e9ecef",
+    "text_secondary":   "#868e96",
+    "text_disabled":    "#495057",
+
+    "border":           "#373a40",
+    "border_focus":     "#4dabf7",
+
+    "scrollbar_bg":     "#25262b",
+    "scrollbar_handle": "#373a40",
+
+    "radius_sm":        "4px",
+    "radius_md":        "6px",
+    "radius_lg":        "10px",
+    "spacing_sm":       "4px",
+    "spacing_md":       "8px"
+  }
+}

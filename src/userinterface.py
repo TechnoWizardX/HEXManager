@@ -14,7 +14,8 @@ from typing import Optional
 
 class MainWindow(QMainWindow):
     def __init__(self, plugin_manager: PluginManager,
-                 theme_manager: Optional[ThemeManager] = None):
+                 theme_manager: Optional[ThemeManager] = None,
+                 data_path: str = "src/data", parent=None):
         super().__init__()
 
         self.plugin_manager = plugin_manager
@@ -51,6 +52,8 @@ class MainWindow(QMainWindow):
         self.scroll_plugins.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.global_settings_btn = QPushButton("Настройки")
+        self.global_settings_btn.setIcon(QIcon("src/data/icons/settings.png"))
+        self.global_settings_btn.setIconSize(QSize(24, 24))
         self.global_settings_btn.setCheckable(True)
         self.global_settings_btn.clicked.connect(self.show_global_settings)
 
@@ -86,12 +89,11 @@ class MainWindow(QMainWindow):
             btn.setIconSize(plugin.icon().actualSize(QSize(32, 32)))
             btn.setCheckable(True)
             btn.setToolTip(plugin.name())
-            btn._id = plugin.id()
             btn.clicked.connect(lambda checked, p=plugin: self.switch_to_plugin(p))
             self.plugins_layout.addWidget(btn)
 
             self.content_stack.addWidget(plugin.plugin_content())
-            print("Plugin loaded:", plugin.name())
+
             # Применяем текущую тему к только что добавленному плагину
             plugin.apply_theme(self.theme_manager)
 
@@ -118,7 +120,7 @@ class MainWindow(QMainWindow):
         for i in range(self.plugins_layout.count()):
             btn = self.plugins_layout.itemAt(i).widget()
             if isinstance(btn, QPushButton):
-                btn.setChecked(btn._id == plugin.id())
+                btn.setChecked(btn.text() == plugin.name())
 
     def show_global_settings(self) -> None:
         self.current_plugin = None
@@ -190,15 +192,10 @@ class GlobalSettingsWidget(QWidget):
         self.theme_combo.blockSignals(True)
         self.theme_combo.clear()
 
-        display_names = {
-            "dark":  "Тёмная (Dark)",
-            "light": "Светлая (Light)",
-            "mocha": "Мокко (Mocha)",
-        }
-        for name in self.theme_manager.available_themes():
-            self.theme_combo.addItem(display_names.get(name, name.capitalize()), userData=name)
+        for theme_id in self.theme_manager.available_themes():
+            display = self.theme_manager.display_name(theme_id)
+            self.theme_combo.addItem(display, userData=theme_id)
 
-        # Синхронизируем с текущей темой
         current = self.theme_manager.current_theme_name()
         idx = self.theme_combo.findData(current)
         if idx >= 0:

@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "id":           "light",
+    "display_name": "Светлая (Light)",
+    "author":       "HEXManager",
+    "description":  "Чистая светлая тема с синим акцентом"
+  },
+
+  "tokens": {
+    "bg_window":        "#f8f9fa",
+    "bg_panel":         "#ffffff",
+    "bg_widget":        "#f1f3f5",
+    "bg_hover":         "#e9ecef",
+    "bg_pressed":       "#dee2e6",
+
+    "accent":           "#228be6",
+    "accent_hover":     "#1c7ed6",
+    "accent_pressed":   "#1971c2",
+    "accent_text":      "#ffffff",
+
+    "text_primary":     "#212529",
+    "text_secondary":   "#868e96",
+    "text_disabled":    "#adb5bd",
+
+    "border":           "#dee2e6",
+    "border_focus":     "#228be6",
+
+    "scrollbar_bg":     "#f1f3f5",
+    "scrollbar_handle": "#ced4da",
+
+    "radius_sm":        "4px",
+    "radius_md":        "6px",
+    "radius_lg":        "10px",
+    "spacing_sm":       "4px",
+    "spacing_md":       "8px"
+  }
+}

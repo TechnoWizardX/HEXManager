@@ -1,7 +1,7 @@
 {
   "id": "ai_chat_plugin",
   "name": "AI",
-  "display_name": "Hello World",
+  "display_name": "ИИ",
   "entry_point": "plugin.py",
   "version": "1.0.0",
   "author": "Your Name",

@@ -9,9 +9,10 @@
   "icon": "icons/plugin.png",
 
   "theme_overrides": {
-    "accent":        "#f03e3e",
+    "accent":        "#f03e30",
     "accent_hover":  "#e03131",
     "border_focus":  "#f03e3e",
-    "radius_md":     "10px"
+    "radius_md":     "10px",
+    "border_color": "#f03e14"
   }
 }
