@@ -65,7 +65,6 @@ class PluginBase(QWidget):
         qss = theme_manager.stylesheet_for_plugin(overrides)
         if qss:
             self.setStyleSheet(qss)
-            print(f"Applied theme overrides for plugin '{self.name()}': {overrides}")
         else:
             # Сбрасываем индивидуальный стиль — наследуем от QApplication
             self.setStyleSheet("")
