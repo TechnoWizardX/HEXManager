@@ -19,7 +19,7 @@ Now, let's go to writing your plugin
 3. Ctrl C + Ctrl V .example plugin folder
 4. Rename it as you like
 5. Open plugin.json and make sure, that it looks like that:
-~~~
+`
 {
   "id": "",
   "name": "",
@@ -33,7 +33,7 @@ Now, let's go to writing your plugin
   "theme_overrides": {
   }
 }
-~~~
+`
 You need to fill in information about your plugin. Let me explain what is there:
 - "id" - This is unique identifier for plugin. If manager meet 2 plugins with one id, it make conflict, and one of them will not be showe
 - "name" - This is first name of plugin. To be honestly, i don't remember for what that, but if it didn't exists, your plugin will not show 
