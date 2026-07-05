@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from src.core import PluginManager
 from src.theme import get_theme_manager
-from src.userinterface import MainWindow
+from src.gui.userinterface import MainWindow
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     manager = PluginManager(plugins_dir="src/plugins")
     manager.discover_plugins()
 
-    window = MainWindow(plugin_manager=manager, theme_manager=theme_manager, data_path="src/data")
+    window = MainWindow(plugin_manager=manager, theme_manager=theme_manager, data_path="data")
     window.load_plugins()
     window.show()
 
