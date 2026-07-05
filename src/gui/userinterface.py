@@ -1,16 +1,16 @@
-import json
-
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QLabel, QPushButton, QScrollArea,
+    QMainWindow, QWidget, QLabel, QPushButton,
     QSplitter, QFrame, QStackedWidget, QVBoxLayout, QHBoxLayout,
-    QFileDialog, QComboBox, QGroupBox
+    QComboBox, QGroupBox, QListWidget, QListWidgetItem, QLineEdit,
+    QStatusBar,
 )
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QFontMetrics
 
 from src.core import PluginManager, PluginBase
 from src.theme import ThemeManager, get_theme_manager
-from src.paths import config_path, user_plugins_dir, user_icons_dir
+from src.paths import load_config, save_config, user_plugins_dir, user_icons_dir
+from src.gui.widgets import WelcomeWidget
 from typing import Optional
 
 
@@ -23,6 +23,8 @@ class MainWindow(QMainWindow):
         self.plugin_manager = plugin_manager
         self.theme_manager = theme_manager or get_theme_manager()
         self.current_plugin: Optional[PluginBase] = None
+        self._icon_mode = False
+        self._icon_mode_threshold = 80
         self.setWindowTitle("HEXManager")
         self.resize(900, 600)
 
@@ -36,22 +38,27 @@ class MainWindow(QMainWindow):
 
         # ----- Левая панель -----
         self.side_panel = QFrame()
-        self.side_panel.setMaximumWidth(300)
+        self.side_panel.setMaximumWidth(280)
         side_layout = QVBoxLayout(self.side_panel)
-        side_layout.setContentsMargins(5, 5, 5, 5)
+        side_layout.setContentsMargins(4, 4, 4, 4)
+        side_layout.setSpacing(4)
 
-        self.plugins_container = QWidget()
-        self.plugins_layout = QVBoxLayout(self.plugins_container)
-        self.plugins_layout.setAlignment(Qt.AlignTop)
-        self.plugins_layout.setSpacing(5)
+        # Поиск плагинов
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Поиск плагинов...")
+        self.search_input.textChanged.connect(self._filter_plugins)
 
-        self.scroll_plugins = QScrollArea()
-        self.scroll_plugins.setWidgetResizable(True)
-        self.scroll_plugins.setWidget(self.plugins_container)
-        self.scroll_plugins.setFrameShape(QFrame.NoFrame)
-        self.scroll_plugins.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.scroll_plugins.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # Список плагинов (QListWidget с drag-drop)
+        self.plugin_list = QListWidget()
+        self.plugin_list.setDragDropMode(QListWidget.InternalMove)
+        self.plugin_list.setDefaultDropAction(Qt.MoveAction)
+        self.plugin_list.setIconSize(QSize(32, 32))
+        self.plugin_list.setSpacing(2)
+        self.plugin_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.plugin_list.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.plugin_list.currentItemChanged.connect(self._on_list_item_changed)
 
+        # Кнопка настроек
         self.global_settings_btn = QPushButton("Настройки")
         icon_path = user_icons_dir() / "settings.png"
         if icon_path.exists():
@@ -60,84 +67,216 @@ class MainWindow(QMainWindow):
         self.global_settings_btn.setCheckable(True)
         self.global_settings_btn.clicked.connect(self.show_global_settings)
 
-        side_layout.addWidget(self.scroll_plugins)
+        side_layout.addWidget(self.search_input)
+        side_layout.addWidget(self.plugin_list)
         side_layout.addWidget(self.global_settings_btn)
 
         # ----- Правая панель (стек) -----
         self.content_stack = QStackedWidget()
+
+        self.welcome_widget = WelcomeWidget()
+        self.content_stack.addWidget(self.welcome_widget)
 
         self.global_settings_widget = GlobalSettingsWidget(self.theme_manager)
         self.content_stack.addWidget(self.global_settings_widget)
 
         self.h_splitter.addWidget(self.side_panel)
         self.h_splitter.addWidget(self.content_stack)
-        self.h_splitter.setSizes([200, 700])
+        self.h_splitter.setSizes([220, 680])
+
+        # Статусбар
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+
+        self.plugins_count_label = QLabel()
+        self.current_plugin_label = QLabel()
+        self.theme_label = QLabel()
+        self.status_bar.addWidget(self.plugins_count_label)
+        self.status_bar.addPermanentWidget(self.current_plugin_label)
+        self.status_bar.addPermanentWidget(self.theme_label)
 
         self.theme_manager.theme_changed.connect(self._on_theme_changed)
+        self.h_splitter.splitterMoved.connect(self._on_splitter_moved)
 
+        self._restore_state()
+
+    # ------------------------------------------------------------------
+    # Загрузка плагинов
     # ------------------------------------------------------------------
 
     def load_plugins(self) -> None:
         plugins = self.plugin_manager.get_plugins()
+        saved_order = self._load_plugin_order()
+
+        if saved_order:
+            plugin_map = {p.id(): p for p in plugins}
+            ordered = []
+            for pid in saved_order:
+                if pid in plugin_map:
+                    ordered.append(plugin_map.pop(pid))
+            ordered.extend(plugin_map.values())
+            plugins = ordered
+
+        self.plugin_list.clear()
+
         if not plugins:
-            label = QLabel("Нет загруженных плагинов")
-            label.setAlignment(Qt.AlignCenter)
-            self.plugins_layout.addWidget(label)
+            item = QListWidgetItem("Нет загруженных плагинов")
+            item.setFlags(Qt.NoItemFlags)
+            self.plugin_list.addItem(item)
+            self.content_stack.setCurrentWidget(self.welcome_widget)
+            self._update_status_bar()
             return
 
         for plugin in plugins:
-            btn = QPushButton(plugin.icon(), plugin.name())
-            btn.setIconSize(plugin.icon().actualSize(QSize(32, 32)))
-            btn.setCheckable(True)
-            btn.setToolTip(plugin.name())
-            btn.clicked.connect(lambda checked, p=plugin: self.switch_to_plugin(p))
-            self.plugins_layout.addWidget(btn)
-
+            item = QListWidgetItem(plugin.icon(), plugin.name())
+            item.setData(Qt.UserRole, plugin)
+            item.setSizeHint(QSize(200, 44))
+            self.plugin_list.addItem(item)
             self.content_stack.addWidget(plugin.plugin_content())
-
             plugin.apply_theme(self.theme_manager)
 
-        self.global_settings_btn.setChecked(True)
-        self.content_stack.setCurrentWidget(self.global_settings_widget)
+        self.content_stack.setCurrentWidget(self.welcome_widget)
+        self._calc_icon_threshold()
+        self._update_sidebar_mode()
+        self._update_status_bar()
 
-        for i in range(self.plugins_layout.count()):
-            btn = self.plugins_layout.itemAt(i).widget()
-            if isinstance(btn, QPushButton):
-                btn.setChecked(False)
+    # ------------------------------------------------------------------
+    # Collapse-режим (иконки без текста)
+    # ------------------------------------------------------------------
 
-    def switch_to_plugin(self, plugin: PluginBase) -> None:
-        self.current_plugin = plugin
-        self.global_settings_btn.setChecked(False)
+    def _calc_icon_threshold(self) -> None:
+        fm = QFontMetrics(self.plugin_list.font())
+        max_w = 0
+        for p in self.plugin_manager.get_plugins():
+            w = fm.horizontalAdvance(p.name())
+            if w > max_w:
+                max_w = w
+        self._icon_mode_threshold = max(max_w // 2, 50)
 
-        widget = plugin.plugin_content()
-        index = self.content_stack.indexOf(widget)
-        if index >= 0:
-            self.content_stack.setCurrentWidget(widget)
-        else:
-            self.content_stack.addWidget(widget)
-            self.content_stack.setCurrentWidget(widget)
+    def _update_sidebar_mode(self) -> None:
+        width = self.side_panel.width()
+        icon_mode = width < self._icon_mode_threshold
+        self._apply_icon_mode(icon_mode)
 
-        for i in range(self.plugins_layout.count()):
-            btn = self.plugins_layout.itemAt(i).widget()
-            if isinstance(btn, QPushButton):
-                btn.setChecked(btn.text() == plugin.name())
+    def _on_splitter_moved(self, pos: int, index: int) -> None:
+        self._apply_icon_mode(self.side_panel.width() < self._icon_mode_threshold)
+
+    def _apply_icon_mode(self, icon_mode: bool) -> None:
+        if icon_mode == self._icon_mode:
+            return
+        self._icon_mode = icon_mode
+
+        for i in range(self.plugin_list.count()):
+            item = self.plugin_list.item(i)
+            plugin = item.data(Qt.UserRole)
+            if not plugin:
+                continue
+            item.setText("" if icon_mode else plugin.name())
+
+        self.search_input.setVisible(not icon_mode)
+        self.plugin_list.setIconSize(QSize(36, 36) if icon_mode else QSize(32, 32))
+
+    # ------------------------------------------------------------------
+    # Навигация
+    # ------------------------------------------------------------------
+
+    def _on_list_item_changed(self, current: Optional[QListWidgetItem],
+                              previous: Optional[QListWidgetItem]) -> None:
+        self.global_settings_btn.setChecked(current is None)
+        if current and current.flags() & Qt.ItemIsSelectable:
+            plugin: PluginBase = current.data(Qt.UserRole)
+            self.current_plugin = plugin
+            widget = plugin.plugin_content()
+            idx = self.content_stack.indexOf(widget)
+            if idx >= 0:
+                self.content_stack.setCurrentWidget(widget)
+        self._update_status_bar()
 
     def show_global_settings(self) -> None:
         self.current_plugin = None
+        self.plugin_list.blockSignals(True)
+        self.plugin_list.clearSelection()
+        self.plugin_list.setCurrentItem(None)
+        self.plugin_list.blockSignals(False)
         self.content_stack.setCurrentWidget(self.global_settings_widget)
-
-        for i in range(self.plugins_layout.count()):
-            btn = self.plugins_layout.itemAt(i).widget()
-            if isinstance(btn, QPushButton):
-                btn.setChecked(False)
-
         self.global_settings_btn.setChecked(True)
+        self._update_status_bar()
+
+    # ------------------------------------------------------------------
+    # Фильтр плагинов
+    # ------------------------------------------------------------------
+
+    def _filter_plugins(self, text: str) -> None:
+        text = text.lower()
+        for i in range(self.plugin_list.count()):
+            item = self.plugin_list.item(i)
+            plugin: Optional[PluginBase] = item.data(Qt.UserRole)
+            if plugin is None:
+                continue
+            item.setHidden(text not in plugin.name().lower())
+
+    # ------------------------------------------------------------------
+    # Статусбар
+    # ------------------------------------------------------------------
+
+    def _update_status_bar(self) -> None:
+        count = self.plugin_list.count()
+        theme_name = self.theme_manager.display_name(
+            self.theme_manager.current_theme_name()
+        )
+        current_name = self.current_plugin.name() if self.current_plugin else "—"
+        self.plugins_count_label.setText(f"Плагинов: {count}  |  ")
+        self.current_plugin_label.setText(f"Активен: {current_name}  |  ")
+        self.theme_label.setText(f"Тема: {theme_name}")
+
+    # ------------------------------------------------------------------
+    # Сохранение / восстановление состояния
+    # ------------------------------------------------------------------
+
+    def _restore_state(self) -> None:
+        from PySide6.QtCore import QByteArray
+        cfg = load_config()
+        geom = cfg.get("window_geometry")
+        if geom:
+            self.restoreGeometry(QByteArray(bytes(geom)))
+        state = cfg.get("window_state")
+        if state:
+            self.restoreState(QByteArray(bytes(state)))
+        sizes = cfg.get("splitter_sizes")
+        if sizes:
+            self.h_splitter.setSizes(sizes)
+
+    def _save_state(self) -> None:
+        order = self._get_plugin_order()
+        save_config({
+            "window_geometry": list(bytes(self.saveGeometry())),
+            "window_state": list(bytes(self.saveState())),
+            "splitter_sizes": list(self.h_splitter.sizes()),
+            "plugin_order": order,
+        })
+
+    def _get_plugin_order(self) -> list:
+        order = []
+        for i in range(self.plugin_list.count()):
+            item = self.plugin_list.item(i)
+            plugin: Optional[PluginBase] = item.data(Qt.UserRole)
+            if plugin:
+                order.append(plugin.id())
+        return order
+
+    def _load_plugin_order(self) -> list:
+        return load_config().get("plugin_order", [])
+
+    def closeEvent(self, event) -> None:
+        self._save_state()
+        super().closeEvent(event)
 
     # ------------------------------------------------------------------
     # Смена темы
     # ------------------------------------------------------------------
 
     def _on_theme_changed(self, theme_name: str) -> None:
+        self._update_status_bar()
         for plugin in self.plugin_manager.get_plugins():
             plugin.apply_theme(self.theme_manager)
 
@@ -203,15 +342,7 @@ class GlobalSettingsWidget(QWidget):
         theme_id = self.theme_combo.currentData()
         if theme_id and theme_id != self.theme_manager.current_theme_name():
             self.theme_manager.apply_theme(theme_id)
-            self._save_config(theme_id)
-
-    def _save_config(self, theme_id: str) -> None:
-        try:
-            cfg = {"theme": theme_id}
-            with open(config_path(), "w", encoding="utf-8") as f:
-                json.dump(cfg, f, indent=2)
-        except OSError as e:
-            print(f"Failed to save config: {e}")
+            save_config({"theme": theme_id})
 
     def _sync_combo(self, _theme_name: str) -> None:
         current = self.theme_manager.current_theme_name()

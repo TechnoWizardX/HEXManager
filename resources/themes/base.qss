@@ -162,6 +162,49 @@ QStackedWidget {{
 }}
 
 
+/* ── Список плагинов (сайдбар) ────────────────────────────── */
+QListWidget {{
+    background-color: transparent;
+    border: none;
+    outline: none;
+}}
+QListWidget::item {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    padding: {spacing_sm} 10px;
+    min-height: 28px;
+}}
+QListWidget::item:hover {{
+    background-color: {bg_hover};
+    border-color: {border_focus};
+}}
+QListWidget::item:selected {{
+    background-color: {accent};
+    color: {accent_text};
+    border-color: {accent};
+}}
+QListWidget::item:selected:!active {{
+    background-color: {accent};
+    color: {accent_text};
+}}
+QListWidget::item:disabled {{
+    color: {text_disabled};
+}}
+
+/* ── Поиск плагинов ───────────────────────────────────────── */
+QLineEdit {{
+    background-color: {bg_widget};
+    color: {text_primary};
+    border: 1px solid {border};
+    border-radius: {radius_md};
+    padding: {spacing_sm} 10px;
+}}
+QLineEdit:focus {{
+    border-color: {border_focus};
+}}
+
 /* ── Статусбар ────────────────────────────────────────────── */
 QStatusBar {{
     background-color: {bg_panel};
