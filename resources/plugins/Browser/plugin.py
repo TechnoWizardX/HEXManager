@@ -1,4 +1,4 @@
-# plugins/Browser/plugin.py
+# plugins/example/plugin.py
 from src.core import PluginBase
 from src.theme import ThemeManager
 from pathlib import Path

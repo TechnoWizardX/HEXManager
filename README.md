@@ -1,45 +1,95 @@
-# HEXMANAGER 
-**This is an experimental manager based on the Qt framework and written in PySide6**
-## Description
-HEXManager allows you to write plugins that are automatically included. 
-It provides a special base structure for plugins, and within the plugin itself, you can create anything you want, as long as the basic architecture is preserved. For this purpose, the PluginBase class exists in core.py. All plugins must be children of PluginBase to maintain stable operation.
+# HEXMANAGER
 
-## Writing plugin
-To use it, you need to install the HEXManager basement; you can safely delete the base plugins. 
+**Менеджер плагинов на PySide6 (Qt for Python)**
 
-Clone the repository to the desired folder:
-`git clone https://github.com/TechnoWizardX/HEXManager`
+## Структура проекта
 
-By default, there's a plugin called .example. It contains all the basic content for the plugin. It's best not to change it =D.
-You can safely add new files, but you should not change existing ones from the base one.
-
-Now, let's go to writing your plugin
-1. Check: don't forget you to clone repository
-2. Go to src -> plugins 
-3. Ctrl C + Ctrl V .example plugin folder
-4. Rename it as you like
-5. Open plugin.json and make sure, that it looks like that:
 ```
-{
-  "id": "",
-  "name": "",
-  "display_name": "",
-  "entry_point": "",
-  "version": "",
-  "author": "",
-  "description": "",
-  "icon": "",
+HEXManager/
+├── main.py                     # Точка входа
+├── requirements                # pyside6
+├── src/
+│   ├── core.py                 # PluginBase + PluginManager
+│   ├── theme.py                # ThemeManager (QSS + JSON-токены)
+│   └── gui/
+│       ├── userinterface.py    # MainWindow + GlobalSettingsWidget
+│       └── widgets.py          # WelcomeWidget
+├── resources/
+│   ├── plugins/                # Плагины
+│   │   ├── AIChat/
+│   │   ├── Browser/
+│   │   └── Spotify/
+│   ├── themes/                 # Темы
+│   │   ├── base.qss
+│   │   ├── dark.json
+│   │   ├── light.json
+│   │   └── mocha.json
+│   └── icons/
+└── HEXManager/data/
+    └── config.json
+```
 
-  "theme_overrides": {
+## Быстрый старт
+
+```bash
+git clone https://github.com/TechnoWizardX/HEXManager
+cd HEXManager
+pip install -r requirements
+python main.py
+```
+
+## Написание плагина
+
+1. Скопируй любую папку из `resources/plugins/`
+2. Отредактируй `plugin.json`:
+```json
+{
+  "id": "my_plugin",
+  "name": "MyPlugin",
+  "display_name": "Мой плагин",
+  "entry_point": "plugin.py",
+  "version": "1.0.0",
+  "author": "Ты",
+  "icon": "icons/plugin.png",
+  "theme_overrides": {}
+}
+```
+3. В `plugin.py` создай наследник `PluginBase`:
+```python
+from src.core import PluginBase
+from pathlib import Path
+from PySide6.QtWidgets import QLabel, QVBoxLayout
+
+class MyPlugin(PluginBase):
+    def __init__(self, plugin_path: Path):
+        super().__init__(plugin_path, name="Мой плагин")
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("Привет!"))
+```
+
+### Поля plugin.json
+
+| Поле | Описание |
+|------|----------|
+| `id` | Уникальный идентификатор (обязательно) |
+| `name` | Имя (обязательно) |
+| `display_name` | Отображаемое имя |
+| `entry_point` | Точка входа (обычно `plugin.py`) |
+| `icon` | Путь к иконке относительно папки плагина |
+| `theme_overrides` | Переопределение цветов темы |
+
+## Темы
+
+Находятся в `resources/themes/`. Каждая тема — JSON с токенами:
+
+```json
+{
+  "_meta": { "id": "mytheme", "display_name": "Моя тема" },
+  "tokens": {
+    "bg_window": "#...",
+    "accent": "#..."
   }
 }
 ```
-You need to fill in information about your plugin. Let me explain what is there:
-- "id" - This is unique identifier for plugin. If manager meet 2 plugins with one id, it make conflict, and one of them will not be showe
-- "name" - This is first name of plugin. To be honestly, i don't remember for what that, but if it didn't exists, your plugin will not show 
-- "display_name" - This is second name of Plugin. Shows instead of "name" if it exists
-- "entry_point" - This is where your plugin starts. If you want the plugin to work correctly, it's better not to change it.
-- "version" - This is version of your plugin
-- "author" - I think it's clear what should be here
-- "icon" - This is path to plugin icon. It too better not change but not critical
-- "theme_overrides" - The most interesting thing. There you write your plugin color if it have. You should use basic architecture of HEXManager theme managing, but if you want, you can change (I do not guarantee that it will work correctly.)
+
+QSS-шаблон: `resources/themes/base.qss`. Токены подставляются через `{имя}`.

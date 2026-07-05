@@ -3,6 +3,5 @@ HEXManager.code-workspace
 __pycache__/
 *.pyc
 *.pyo
-dist/
-build/
-*.spec
+.DS_Store
+Thumbs.db

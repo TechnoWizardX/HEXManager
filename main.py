@@ -1,35 +1,28 @@
+# main.py
 import sys
-
+from pathlib import Path
 from PySide6.QtWidgets import QApplication
-
 from src.core import PluginManager
 from src.theme import get_theme_manager
 from src.gui.userinterface import MainWindow
-from src.paths import (
-    user_themes_dir, user_plugins_dir,
-    bundled_plugins_dir, ensure_user_dirs,
-    load_config, save_config,
-)
-
-
-def _init_user_data() -> None:
-    ensure_user_dirs()
-    if not load_config().get("theme"):
-        save_config({"theme": "dark"})
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    _init_user_data()
 
-    theme_manager = get_theme_manager(themes_dir=user_themes_dir())
-    theme_name = load_config().get("theme", "dark")
+    # ThemeManager сам найдёт src/themes/*.json и base.qss
+    theme_manager = get_theme_manager(themes_dir=Path("resources/themes"))
+    config_file = Path("HEXManager/data/config.json")
+    if config_file.exists():
+        import json
+        with open(config_file, encoding="utf-8") as f:
+            config = json.load(f)
+            theme_name = config.get("theme", "dark")
+    else:
+        theme_name = "dark"
+
     theme_manager.apply_theme(theme_name, app)
 
-    manager = PluginManager(
-        plugins_dir=user_plugins_dir(),
-        bundled_dir=bundled_plugins_dir(),
-    )
+    manager = PluginManager(plugins_dir="resources/plugins")
     manager.discover_plugins()
 
     window = MainWindow(plugin_manager=manager, theme_manager=theme_manager)
