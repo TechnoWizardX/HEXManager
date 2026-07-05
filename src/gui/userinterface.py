@@ -1,4 +1,5 @@
-# src/userinterface.py
+import json
+
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QPushButton, QScrollArea,
     QSplitter, QFrame, QStackedWidget, QVBoxLayout, QHBoxLayout,
@@ -9,19 +10,19 @@ from PySide6.QtGui import QIcon
 
 from src.core import PluginManager, PluginBase
 from src.theme import ThemeManager, get_theme_manager
+from src.paths import config_path, user_plugins_dir, user_icons_dir
 from typing import Optional
-from src.gui.widgets import *
+
 
 class MainWindow(QMainWindow):
     def __init__(self, plugin_manager: PluginManager,
                  theme_manager: Optional[ThemeManager] = None,
-                 data_path: str = "src/data", parent=None):
+                 parent=None):
         super().__init__()
 
         self.plugin_manager = plugin_manager
         self.theme_manager = theme_manager or get_theme_manager()
         self.current_plugin: Optional[PluginBase] = None
-        self.data_path = data_path
         self.setWindowTitle("HEXManager")
         self.resize(900, 600)
 
@@ -52,7 +53,9 @@ class MainWindow(QMainWindow):
         self.scroll_plugins.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.global_settings_btn = QPushButton("Настройки")
-        self.global_settings_btn.setIcon(QIcon("src/data/icons/settings.png"))
+        icon_path = user_icons_dir() / "settings.png"
+        if icon_path.exists():
+            self.global_settings_btn.setIcon(QIcon(str(icon_path)))
         self.global_settings_btn.setIconSize(QSize(24, 24))
         self.global_settings_btn.setCheckable(True)
         self.global_settings_btn.clicked.connect(self.show_global_settings)
@@ -70,13 +73,11 @@ class MainWindow(QMainWindow):
         self.h_splitter.addWidget(self.content_stack)
         self.h_splitter.setSizes([200, 700])
 
-        # Подписываемся на смену темы — перерисуем все плагины
         self.theme_manager.theme_changed.connect(self._on_theme_changed)
 
     # ------------------------------------------------------------------
 
     def load_plugins(self) -> None:
-        """Загружает плагины, добавляет кнопки в боковую панель."""
         plugins = self.plugin_manager.get_plugins()
         if not plugins:
             label = QLabel("Нет загруженных плагинов")
@@ -94,7 +95,6 @@ class MainWindow(QMainWindow):
 
             self.content_stack.addWidget(plugin.plugin_content())
 
-            # Применяем текущую тему к только что добавленному плагину
             plugin.apply_theme(self.theme_manager)
 
         self.global_settings_btn.setChecked(True)
@@ -138,7 +138,6 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _on_theme_changed(self, theme_name: str) -> None:
-        """Перекрашивает все загруженные плагины при смене темы."""
         for plugin in self.plugin_manager.get_plugins():
             plugin.apply_theme(self.theme_manager)
 
@@ -148,8 +147,6 @@ class MainWindow(QMainWindow):
 # ---------------------------------------------------------------------------
 
 class GlobalSettingsWidget(QWidget):
-    """Правая панель с общими настройками приложения."""
-
     def __init__(self, theme_manager: Optional[ThemeManager] = None, parent=None):
         super().__init__(parent)
         self.theme_manager = theme_manager or get_theme_manager()
@@ -171,21 +168,20 @@ class GlobalSettingsWidget(QWidget):
         theme_layout.addWidget(self.theme_combo)
         layout.addWidget(theme_group)
 
-        # --- Блок папки плагинов ---
+        # --- Блок плагинов ---
         plugins_group = QGroupBox("Плагины")
         plugins_layout = QVBoxLayout(plugins_group)
 
-        self.plugins_dir_label = QLabel("Папка с плагинами: src/plugins")
-        change_dir_btn = QPushButton("Изменить папку плагинов")
-        change_dir_btn.clicked.connect(self.change_plugins_dir)
+        plugins_path_label = QLabel(f"Папка плагинов: {user_plugins_dir()}")
+        open_plugins_btn = QPushButton("Открыть папку плагинов")
+        open_plugins_btn.clicked.connect(self._open_plugins_folder)
 
-        plugins_layout.addWidget(self.plugins_dir_label)
-        plugins_layout.addWidget(change_dir_btn)
+        plugins_layout.addWidget(plugins_path_label)
+        plugins_layout.addWidget(open_plugins_btn)
         layout.addWidget(plugins_group)
 
         layout.addStretch()
 
-        # Обновляем комбобокс при регистрации новых тем
         self.theme_manager.theme_changed.connect(self._sync_combo)
 
     def _populate_themes(self) -> None:
@@ -207,9 +203,17 @@ class GlobalSettingsWidget(QWidget):
         theme_id = self.theme_combo.currentData()
         if theme_id and theme_id != self.theme_manager.current_theme_name():
             self.theme_manager.apply_theme(theme_id)
+            self._save_config(theme_id)
+
+    def _save_config(self, theme_id: str) -> None:
+        try:
+            cfg = {"theme": theme_id}
+            with open(config_path(), "w", encoding="utf-8") as f:
+                json.dump(cfg, f, indent=2)
+        except OSError as e:
+            print(f"Failed to save config: {e}")
 
     def _sync_combo(self, _theme_name: str) -> None:
-        """Синхронизирует комбобокс если тема сменилась извне."""
         current = self.theme_manager.current_theme_name()
         idx = self.theme_combo.findData(current)
         if idx >= 0:
@@ -217,7 +221,10 @@ class GlobalSettingsWidget(QWidget):
             self.theme_combo.setCurrentIndex(idx)
             self.theme_combo.blockSignals(False)
 
-    def change_plugins_dir(self) -> None:
-        dir_path = QFileDialog.getExistingDirectory(self, "Выберите папку с плагинами")
-        if dir_path:
-            self.plugins_dir_label.setText(f"Папка с плагинами: {dir_path}")
+    def _open_plugins_folder(self) -> None:
+        import subprocess
+        path = str(user_plugins_dir())
+        try:
+            subprocess.Popen(["explorer", path])
+        except OSError:
+            pass

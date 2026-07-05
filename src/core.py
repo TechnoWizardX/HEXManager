@@ -1,8 +1,7 @@
-# src/core.py
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Dict, List, TYPE_CHECKING
+from typing import Dict, List, Optional, TYPE_CHECKING
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QIcon
 
@@ -27,23 +26,18 @@ class PluginBase(QWidget):
     # ------------------------------------------------------------------
 
     def id(self) -> str:
-        """Ru: Возвращает id плагина \n En: Returns the plugin id"""
         return self._id
 
     def manifest(self) -> dict:
-        """Ru: Возвращает метаданные плагина \n En: Returns the plugin metadata"""
         return self._manifest or {}
 
     def name(self) -> str:
-        """Ru: Возвращает название плагина \n En: Returns the plugin name"""
         return self._name
 
     def icon(self) -> QIcon:
-        """Ru: Возвращает иконку плагина \n En: Returns the plugin icon"""
         return self._icon
 
     def plugin_content(self) -> QWidget:
-        """Ru: Возвращает содержимое плагина \n En: Returns the plugin widget"""
         return self
 
     # ------------------------------------------------------------------
@@ -51,37 +45,35 @@ class PluginBase(QWidget):
     # ------------------------------------------------------------------
 
     def apply_theme(self, theme_manager: "ThemeManager") -> None:
-        """
-        Вызывается ThemeManager при каждой смене темы.
-
-        Базовая реализация автоматически применяет theme_overrides из
-        plugin.json.  Переопределяйте этот метод в плагине, если нужна
-        более тонкая настройка (например, ручная перекраска canvas-элементов).
-
-        Args:
-            theme_manager: текущий ThemeManager со всеми токенами.
-        """
         overrides = self._manifest.get("theme_overrides", {})
         qss = theme_manager.stylesheet_for_plugin(overrides)
         if qss:
             self.setStyleSheet(qss)
         else:
-            # Сбрасываем индивидуальный стиль — наследуем от QApplication
             self.setStyleSheet("")
 
 
 class PluginManager:
-    def __init__(self, plugins_dir: str = "plugins"):
+    def __init__(self, plugins_dir: str | Path = "plugins",
+                 bundled_dir: Optional[str | Path] = None):
         self.plugins_dir = Path(plugins_dir)
-        self.plugins: Dict[str, PluginBase] = {}          # ключ — id
-        self.plugins_by_name: Dict[str, PluginBase] = {}  # для обратной совместимости
+        self.bundled_dir = Path(bundled_dir) if bundled_dir else None
+        self.plugins: Dict[str, PluginBase] = {}
+        self.plugins_by_name: Dict[str, PluginBase] = {}
 
     def discover_plugins(self) -> None:
-        if not self.plugins_dir.exists():
-            self.plugins_dir.mkdir(parents=True)
+        """Двухслойная загрузка: bundled → user (user переопределяет bundled по id)."""
+        if self.bundled_dir and self.bundled_dir.exists():
+            self._discover_in_dir(self.bundled_dir)
+
+        if self.plugins_dir.exists():
+            self._discover_in_dir(self.plugins_dir)
+
+    def _discover_in_dir(self, dir_path: Path) -> None:
+        if not dir_path.exists():
             return
 
-        for plugin_folder in self.plugins_dir.iterdir():
+        for plugin_folder in dir_path.iterdir():
             if not plugin_folder.is_dir():
                 continue
 
@@ -143,7 +135,6 @@ class PluginManager:
                 print(f"Failed to load plugin {plugin_folder.name}: {e}")
 
     def _load_legacy_plugin(self, plugin_folder: Path) -> None:
-        """Загрузка плагина без plugin.json (обратная совместимость)."""
         plugin_file = plugin_folder / "plugin.py"
         if not plugin_file.exists():
             return

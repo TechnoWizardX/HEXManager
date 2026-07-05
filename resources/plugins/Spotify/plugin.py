@@ -1,19 +1,19 @@
-# plugins/example/plugin.py
+# plugins/Spotify/plugin.py
 from src.core import PluginBase
 from src.theme import ThemeManager
 from pathlib import Path
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QFrame
 
 
-class AIPlugin(PluginBase):
+class SpotifyPlugin(PluginBase):
     def __init__(self, plugin_path: Path):
         icon_path = plugin_path / "icons" / "plugin.png"
         super().__init__(
             plugin_path,
-            name="AI Chat",
+            name="Spotify",
             icon_path=str(icon_path),
         )
-        self.label = QLabel("AI Chat")
+        self.label = QLabel("Spotify")
         self.label.setStyleSheet("font-size: 16px; font-weight: bold;")
 
         self.accent_demo = QFrame()

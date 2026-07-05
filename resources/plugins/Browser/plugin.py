@@ -1,19 +1,19 @@
-# plugins/example/plugin.py
+# plugins/Browser/plugin.py
 from src.core import PluginBase
 from src.theme import ThemeManager
 from pathlib import Path
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QFrame
 
 
-class SpotifyPlugin(PluginBase):
+class BrowserPlugin(PluginBase):
     def __init__(self, plugin_path: Path):
         icon_path = plugin_path / "icons" / "plugin.png"
         super().__init__(
             plugin_path,
-            name="Example Plugin",
+            name="Browser",
             icon_path=str(icon_path),
         )
-        self.label = QLabel("Spotify")
+        self.label = QLabel("Browser")
         self.label.setStyleSheet("font-size: 16px; font-weight: bold;")
 
         self.accent_demo = QFrame()

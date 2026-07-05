@@ -1,2 +1,8 @@
-.venv 
+.venv/
 HEXManager.code-workspace
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+*.spec

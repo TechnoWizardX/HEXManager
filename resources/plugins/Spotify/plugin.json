@@ -1,5 +1,5 @@
 {
-  "id": "sporify_plugin",
+  "id": "spotify_plugin",
   "name": "Spotify",
   "display_name": "Spotify",
   "entry_point": "plugin.py",
